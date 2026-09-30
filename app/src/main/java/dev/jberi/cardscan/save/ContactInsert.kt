@@ -14,49 +14,25 @@ import dev.jberi.cardscan.model.PhoneType
  * Using the intent rather than a direct ContentProvider write means the app needs no contacts
  * permission at all, and the editor acts as a second review step before anything is committed.
  *
- * The flat extras only cover three phones, one email and no website, so the extra rows go in
- * [Insert.DATA] as ContentValues. The editor silently drops rows it cannot display, so the flat
- * extras are still set for the common fields as a belt-and-braces fallback.
+ * Everything travels as [Insert.DATA] rows. The flat extras are deliberately not set: they
+ * cannot express a website, structured name parts, or more than three phones, and combining the
+ * two mechanisms makes Google Contacts show every number and address twice.
  */
 object ContactInsert {
 
   fun intentFor(card: ContactCard): Intent = Intent(Insert.ACTION).apply {
     type = ContactsContract.RawContacts.CONTENT_TYPE
-
-    if (card.displayName.isNotBlank()) putExtra(Insert.NAME, card.displayName)
-    if (card.company.isNotBlank()) putExtra(Insert.COMPANY, card.company)
-    if (card.jobTitle.isNotBlank()) putExtra(Insert.JOB_TITLE, card.jobTitle)
-    if (card.address.isNotBlank()) putExtra(Insert.POSTAL, card.address)
-    if (card.note.isNotBlank()) putExtra(Insert.NOTES, card.note)
-
-    card.phones.getOrNull(0)?.let {
-      putExtra(Insert.PHONE, it.number)
-      putExtra(Insert.PHONE_TYPE, androidPhoneType(it.type))
-    }
-    card.phones.getOrNull(1)?.let {
-      putExtra(Insert.SECONDARY_PHONE, it.number)
-      putExtra(Insert.SECONDARY_PHONE_TYPE, androidPhoneType(it.type))
-    }
-    card.phones.getOrNull(2)?.let {
-      putExtra(Insert.TERTIARY_PHONE, it.number)
-      putExtra(Insert.TERTIARY_PHONE_TYPE, androidPhoneType(it.type))
-    }
-    card.emails.getOrNull(0)?.let {
-      putExtra(Insert.EMAIL, it.address)
-      putExtra(Insert.EMAIL_TYPE, CommonDataKinds.Email.TYPE_WORK)
-    }
-    card.emails.getOrNull(1)?.let {
-      putExtra(Insert.SECONDARY_EMAIL, it.address)
-      putExtra(Insert.SECONDARY_EMAIL_TYPE, CommonDataKinds.Email.TYPE_OTHER)
-    }
-
     val rows = dataRows(card)
     if (rows.isNotEmpty()) putExtra(Insert.DATA, ArrayList(rows))
   }
 
   /**
-   * Rows the flat extras cannot express: structured name parts, website, any phone or email
-   * beyond the third/second, and the organization title pairing.
+   * Every field, as typed data rows.
+   *
+   * Verified on a Pixel 10a running Android 17: Google Contacts honours all of these, splitting
+   * StructuredName into first/last and showing Organization, Website and StructuredPostal.
+   * Setting the flat extras (Insert.PHONE, Insert.EMAIL, ...) as well is actively harmful, since
+   * the editor adds both and shows each number and address twice.
    */
   internal fun dataRows(card: ContactCard): List<ContentValues> {
     val rows = mutableListOf<ContentValues>()
