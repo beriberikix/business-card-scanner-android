@@ -142,9 +142,50 @@ blocking the build.
 
 **49/49 heuristic fields, and every phone number, email and URL exact.**
 
-That number is honest about what it covers and no more: seven cards, one of them real, all Latin
-script, all captured under good light by a scanner that had already deskewed them. It says the
-parser handles these layout shapes, not that it handles business cards in general.
+That number is not the real one. Those seven cards were chosen to exercise layout shapes I had
+already thought about, so scoring full marks on them mostly proves the parser handles the cases it
+was written for.
+
+### What happened on twelve real cards
+
+A batch of twelve cards scanned in one session tells a very different story. Measured after the
+fixes described below:
+
+| Field | Correct |
+|---|---|
+| Name | 10 of 12 |
+| Job title | 9 of 12 |
+| Company | 7 of 11 (one card carries no company text) |
+| Email | 8 clean, 2 damaged past repair, 2 missed |
+| Phone | 8 of 10, plus one spurious extra |
+
+Before the fixes it was 9 names and 6 titles. Treat the curated suite as a regression guard, not as
+a measure of quality; the real batch is the honest signal.
+
+Four parser bugs came out of that batch, each confirmed against the actual OCR rather than guessed:
+
+- **Line merging glued a name onto the title beneath it.** The grouper and the parser each had
+  their own notion of a title and disagreed, so both fields were lost. They now share
+  `TitleMatcher`, and a change of letter case counts as a change of field.
+- **A company line naming a country was eaten by the address.** a company line naming a country matched a
+  country word before its legal form was considered. A legal form now outranks every address cue.
+- **Email local parts run the name together**, as in `marisolberenguer@`. The match was tested in only
+  one direction, so the company won the name slot.
+- **Any line containing " of " counted as a title**, so a parent-company tagline beat
+  the real one. A recognised title word is now required, matched prefix-tolerantly because OCR
+  damages word endings: real cards produced "Directorr" and "Directo" for "Director".
+
+Prefix tolerance then needed a guard, which the curated suite caught immediately: "office" prefixes
+"officer", so a phone label on a two-column card began reading as a job title.
+
+### Known failures that remain
+
+- **A company set in larger type than the person wins the name slot** when OCR has also destroyed
+  the email, leaving no tiebreaker. Using the website domain as company evidence would fix this.
+- **A title split across two lines with a phone number between them** is not rejoined, because the
+  parts are no longer adjacent in reading order.
+- **A location tagline can be chosen as the company** when the card shows only a logo.
+- **Stray digit runs become phone numbers.** They are flagged as unnormalized, not silently wrong.
 
 ### Real OCR errors this had to survive
 
