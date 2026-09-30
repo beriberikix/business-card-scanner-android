@@ -1,0 +1,115 @@
+{
+    "lines": [
+        {
+            "text": "Sofia Marchetti",
+            "left": 61,
+            "top": 88,
+            "right": 372,
+            "bottom": 120,
+            "confidence": 0.8836495,
+            "language": "it"
+        },
+        {
+            "text": "Managing Partner",
+            "left": 62,
+            "top": 146,
+            "right": 282,
+            "bottom": 172,
+            "confidence": 0.8859375,
+            "language": "en"
+        },
+        {
+            "text": "Marchetti & Vance LLP",
+            "left": 61,
+            "top": 206,
+            "right": 348,
+            "bottom": 227,
+            "confidence": 0.86154515,
+            "language": "en"
+        },
+        {
+            "text": "office",
+            "left": 591,
+            "top": 94,
+            "right": 651,
+            "bottom": 110,
+            "confidence": 0.8489583,
+            "language": "en"
+        },
+        {
+            "text": "+1312 555 0144",
+            "left": 591,
+            "top": 131,
+            "right": 778,
+            "bottom": 148,
+            "confidence": 0.92903644,
+            "language": "am"
+        },
+        {
+            "text": "Mobile",
+            "left": 591,
+            "top": 194,
+            "right": 658,
+            "bottom": 210,
+            "confidence": 0.9121094,
+            "language": "ro"
+        },
+        {
+            "text": "+1 312 555 0190",
+            "left": 591,
+            "top": 231,
+            "right": 778,
+            "bottom": 248,
+            "confidence": 0.86848956,
+            "language": "und-Latn"
+        },
+        {
+            "text": "Email",
+            "left": 591,
+            "top": 304,
+            "right": 648,
+            "bottom": 320,
+            "confidence": 0.83125,
+            "language": "en"
+        },
+        {
+            "text": "sofia @mvlaw.com",
+            "left": 599,
+            "top": 338,
+            "right": 785,
+            "bottom": 361,
+            "confidence": 0.8440104,
+            "language": "en"
+        },
+        {
+            "text": "Address",
+            "left": 591,
+            "top": 409,
+            "right": 677,
+            "bottom": 425,
+            "confidence": 0.86383927,
+            "language": "en"
+        },
+        {
+            "text": "200 WAdams St, Suite 1400",
+            "left": 591,
+            "top": 445,
+            "right": 858,
+            "bottom": 462,
+            "confidence": 0.8651414,
+            "language": "en"
+        },
+        {
+            "text": "Chicago, IL 60606",
+            "left": 591,
+            "top": 473,
+            "right": 757,
+            "bottom": 494,
+            "confidence": 0.8106771,
+            "angle": -0.7547362,
+            "language": "en"
+        }
+    ],
+    "imageWidth": 1050,
+    "imageHeight": 600
+}

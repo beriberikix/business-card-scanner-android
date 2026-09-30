@@ -1,0 +1,60 @@
+{
+    "lines": [
+        {
+            "text": "VANTA SECURITY LABS",
+            "left": 60,
+            "top": 97,
+            "right": 429,
+            "bottom": 119,
+            "confidence": 0.82169116,
+            "language": "en"
+        },
+        {
+            "text": "Marcus Oyelaran",
+            "left": 63,
+            "top": 199,
+            "right": 444,
+            "bottom": 243,
+            "confidence": 0.87890625,
+            "language": "es"
+        },
+        {
+            "text": "Principal Security Engineer",
+            "left": 62,
+            "top": 261,
+            "right": 395,
+            "bottom": 287,
+            "confidence": 0.8690625,
+            "language": "en"
+        },
+        {
+            "text": "M +1 206 555 0173",
+            "left": 62,
+            "top": 366,
+            "right": 283,
+            "bottom": 384,
+            "confidence": 0.8707933,
+            "language": "en"
+        },
+        {
+            "text": "marcus@vantalabs. io",
+            "left": 62,
+            "top": 415,
+            "right": 308,
+            "bottom": 438,
+            "confidence": 0.8564967,
+            "language": "pt"
+        },
+        {
+            "text": "vantalabs. io",
+            "left": 68,
+            "top": 470,
+            "right": 233,
+            "bottom": 492,
+            "confidence": 0.82128906,
+            "language": "es"
+        }
+    ],
+    "imageWidth": 1050,
+    "imageHeight": 600
+}

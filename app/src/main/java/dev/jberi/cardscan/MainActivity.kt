@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -81,6 +82,7 @@ private fun AppScreen(modifier: Modifier = Modifier, initialUri: Uri? = null) {
   val activity = context as Activity
   val scope = rememberCoroutineScope()
   var diagnostics by remember { mutableStateOf<String?>(null) }
+  var keepScans by remember { mutableStateOf(vm.keepForTesting) }
 
   val region = remember {
     val tm = context.getSystemService(TelephonyManager::class.java)
@@ -130,6 +132,14 @@ private fun AppScreen(modifier: Modifier = Modifier, initialUri: Uri? = null) {
             )
           },
         ) { Text("Import image") }
+
+        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+          Checkbox(checked = keepScans, onCheckedChange = {
+            keepScans = it
+            vm.keepForTesting = it
+          })
+          Text("Keep scans on device for parser testing")
+        }
 
         if (state.busy) CircularProgressIndicator()
         state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }

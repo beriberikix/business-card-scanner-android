@@ -37,20 +37,23 @@ class ParserAccuracyTest {
         report.appendLine("  ${if (ok) "OK  " else "MISS"} $field: expected='$expected' got='$actual'")
       }
 
+      soft("prefix", f.expected.prefix, got.prefix)
       soft("givenName", f.expected.givenName, got.givenName)
+      soft("middleName", f.expected.middleName, got.middleName)
       soft("familyName", f.expected.familyName, got.familyName)
       soft("jobTitle", f.expected.jobTitle, got.jobTitle)
       soft("company", f.expected.company, got.company)
       soft("address", f.expected.address, got.address)
 
-      val gotPhones = got.phones.map { it.number }
+      val gotPhones = got.phones.map { "${it.number}/${it.type}" }
+      val wantPhones = f.expected.phones.map { "${it.number}/${it.type}" }
       val gotEmails = got.emails.map { it.address }
-      report.appendLine("  phones: expected=${f.expected.phones} got=$gotPhones")
+      report.appendLine("  phones: expected=$wantPhones got=$gotPhones")
       report.appendLine("  emails: expected=${f.expected.emails} got=$gotEmails")
       report.appendLine("  urls:   expected=${f.expected.urls} got=${got.urls}")
 
-      if (gotPhones != f.expected.phones) {
-        failures += "${f.name}: phones expected=${f.expected.phones} got=$gotPhones"
+      if (gotPhones != wantPhones) {
+        failures += "${f.name}: phones expected=$wantPhones got=$gotPhones"
       }
       if (gotEmails != f.expected.emails) {
         failures += "${f.name}: emails expected=${f.expected.emails} got=$gotEmails"

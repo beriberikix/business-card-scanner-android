@@ -21,6 +21,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class ScanUiState(
   val busy: Boolean = false,
@@ -41,6 +45,9 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
   val state: StateFlow<ScanUiState> = _state.asStateFlow()
 
   /** Runs the whole pipeline on one captured image: decode, barcode, OCR, parse. */
+  /** When on, each scan is kept on the device so it can be pulled into the test fixture set. */
+  var keepForTesting: Boolean = true
+
   fun process(uri: Uri, defaultRegion: String = "US") {
     viewModelScope.launch {
       _state.value = ScanUiState(busy = true)
@@ -55,7 +62,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         val card = fromQr ?: parser.parse(ocr, defaultRegion)
 
         Log.i(TAG, "ocr ${ocr.lines.size} lines in ${ocrMs}ms, barcode=${fromQr != null}")
-        Log.i(TAG, "OCR_JSON ${Json.encodeToString(ocr)}")
+        if (keepForTesting) saveForTesting(bmp, ocr)
 
         _state.value = ScanUiState(
           bitmap = bmp,
@@ -69,6 +76,25 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
         _state.value = ScanUiState(error = "${t::class.java.simpleName}: ${t.message}")
       }
     }
+  }
+
+  /**
+   * Writes the captured image and its OCR result side by side under the app's external files
+   * dir, named by timestamp. `tools/pull-scans.sh` copies them into `samples/`, which is how a
+   * stack of real cards becomes a regression suite.
+   */
+  private suspend fun saveForTesting(bitmap: Bitmap, ocr: OcrResult) = withContext(Dispatchers.IO) {
+    runCatching {
+      val dir = File(getApplication<Application>().getExternalFilesDir(null), "captures")
+        .apply { mkdirs() }
+      val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
+      File(dir, "$stamp.jpg").outputStream().use {
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 92, it)
+      }
+      File(dir, "$stamp.ocr.json").writeText(Json.encodeToString(ocr))
+      Log.i(TAG, "saved scan $stamp")
+    }.onFailure { Log.w(TAG, "could not save scan", it) }
+    Unit
   }
 
   /** Re-parses the existing OCR result; used after the parser changes or a page is added. */

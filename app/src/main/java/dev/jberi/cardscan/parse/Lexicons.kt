@@ -39,6 +39,11 @@ internal object Lexicons {
     "realtor", "nurse", "doctor", "physician", "therapist", "dentist", "professor", "lecturer",
     "teacher", "instructor", "trainer", "technician", "operations", "sales", "marketing",
     "recruiter", "buyer", "planner", "auditor", "surveyor", "inspector", "foreman",
+    // Common non-English titles, since cards are often not in English.
+    "leiter", "leiterin", "technische", "technischer", "geschäftsführer", "geschaeftsfuehrer",
+    "inhaber", "direktor", "vorstand", "prokurist", "berater", "beraterin", "entwickler",
+    "ingenieur", "vertrieb", "einkauf", "directeur", "directrice", "responsable", "gérant",
+    "ingénieur", "chargé", "ingeniero", "gerente", "jefe", "socio", "titular",
   )
 
   /** Honorifics that precede a name. */

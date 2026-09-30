@@ -1,0 +1,24 @@
+{
+    "lines": [
+        {
+            "text": "Ines Okafor",
+            "left": 63,
+            "top": 237,
+            "right": 338,
+            "bottom": 286,
+            "confidence": 0.82304686,
+            "language": "en"
+        },
+        {
+            "text": "ines@okafor.studio",
+            "left": 62,
+            "top": 326,
+            "right": 314,
+            "bottom": 352,
+            "confidence": 0.80533856,
+            "language": "en"
+        }
+    ],
+    "imageWidth": 1050,
+    "imageHeight": 600
+}

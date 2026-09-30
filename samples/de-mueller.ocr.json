@@ -1,0 +1,79 @@
+{
+    "lines": [
+        {
+            "text": "Hochbrunn Systeme GmbH",
+            "left": 62,
+            "top": 67,
+            "right": 526,
+            "bottom": 100,
+            "confidence": 0.8847656,
+            "language": "en"
+        },
+        {
+            "text": "Dr. Katharina Müller",
+            "left": 63,
+            "top": 169,
+            "right": 456,
+            "bottom": 199,
+            "confidence": 0.8680556,
+            "language": "tr"
+        },
+        {
+            "text": "Technische Leiterin",
+            "left": 61,
+            "top": 226,
+            "right": 298,
+            "bottom": 246,
+            "confidence": 0.9034288,
+            "language": "de"
+        },
+        {
+            "text": "Tel +49 30 901820",
+            "left": 60,
+            "top": 315,
+            "right": 266,
+            "bottom": 333,
+            "confidence": 0.88560265,
+            "language": "en"
+        },
+        {
+            "text": "Fax +49 30 901899",
+            "left": 62,
+            "top": 356,
+            "right": 275,
+            "bottom": 373,
+            "confidence": 0.8989955,
+            "language": "en"
+        },
+        {
+            "text": "k.mueller@hochbrunn.de",
+            "left": 62,
+            "top": 405,
+            "right": 339,
+            "bottom": 426,
+            "confidence": 0.8483665,
+            "language": "de"
+        },
+        {
+            "text": "Zimmerstrasse 14, 10969 Berlin",
+            "left": 61,
+            "top": 454,
+            "right": 384,
+            "bottom": 473,
+            "confidence": 0.880787,
+            "language": "en"
+        },
+        {
+            "text": "Germany",
+            "left": 60,
+            "top": 494,
+            "right": 154,
+            "bottom": 515,
+            "confidence": 0.8141741,
+            "angle": 0.98974955,
+            "language": "en"
+        }
+    ],
+    "imageWidth": 1050,
+    "imageHeight": 600
+}

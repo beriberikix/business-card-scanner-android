@@ -1,0 +1,25 @@
+{
+  "defaultRegion": "US",
+  "givenName": "Sofia",
+  "familyName": "Marchetti",
+  "jobTitle": "Managing Partner",
+  "company": "Marchetti & Vance LLP",
+  "phones": [
+    {
+      "number": "+13125550144",
+      "type": "WORK"
+    },
+    {
+      "number": "+13125550190",
+      "type": "MOBILE"
+    }
+  ],
+  "emails": [
+    "sofia@mvlaw.com"
+  ],
+  "urls": [],
+  "address": "200 WAdams St, Suite 1400, Chicago, IL 60606",
+  "note": "Synthetic. Two columns, labels on their own lines. OCR read 'sofia @mvlaw.com'.",
+  "prefix": "",
+  "middleName": ""
+}

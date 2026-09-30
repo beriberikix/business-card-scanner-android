@@ -17,3 +17,7 @@ local.properties
 # Local JDK/SDK pointers
 /local.properties
 .kotlin/
+
+# Raw scans pulled off the phone: bulk captures of other people's contact details.
+# Promote individual cards into samples/ deliberately instead.
+/samples/scans/

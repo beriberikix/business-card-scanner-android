@@ -4,16 +4,21 @@ import dev.jberi.cardscan.ocr.OcrResult
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
+@Serializable
+data class ExpectedPhone(val number: String, val type: String = "WORK")
+
 /** Expected fields for one sample card, kept alongside its OCR output in `samples/`. */
 @Serializable
 data class ExpectedCard(
   val note: String = "",
   val defaultRegion: String = "US",
+  val prefix: String = "",
   val givenName: String = "",
+  val middleName: String = "",
   val familyName: String = "",
   val jobTitle: String = "",
   val company: String = "",
-  val phones: List<String> = emptyList(),
+  val phones: List<ExpectedPhone> = emptyList(),
   val emails: List<String> = emptyList(),
   val urls: List<String> = emptyList(),
   val address: String = "",

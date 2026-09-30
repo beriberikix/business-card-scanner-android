@@ -18,21 +18,26 @@ import dev.jberi.cardscan.ocr.OcrResult
 class HeuristicCardParser : CardParser {
 
   override fun parse(ocr: OcrResult, defaultRegion: String): ContactCard {
-    val rawLines = ocr.readingOrder()
-      .filter { it.text.isNotBlank() && !Lexicons.NOISE.matches(it.text) }
-    if (rawLines.isEmpty()) return ContactCard()
+    val ordered = ocr.readingOrder().filter { it.text.isNotBlank() }
+    if (ordered.isEmpty()) return ContactCard()
     // Rejoin names and titles that wrapped across two OCR lines before classifying anything.
-    val lines = LineGrouper.group(rawLines)
+    val allLines = LineGrouper.group(ordered)
 
-    val emails = lines.flatMap { EmailRepair.extract(it.text) }.distinctBy { it.address }
+    // Standalone labels ("Mobile", "Email") are noise when looking for a name or company, but
+    // they are what types the number underneath them on a two-column card. So contact channels
+    // are read from every line, and only the classification pool drops the labels.
+    val lines = allLines.filter { !Lexicons.NOISE.matches(it.text) }
 
-    val phones = extractPhones(lines, defaultRegion)
+    val emails = allLines.flatMap { EmailRepair.extract(it.text) }.distinctBy { it.address }
+
+    val phones = extractPhones(allLines, defaultRegion)
 
     // Emails are stripped from each line first, so a bare domain only matches when it really
     // appears outside an email address.
     val emailDomains = emails.mapNotNull { it.address.substringAfter('@').takeIf(String::isNotBlank) }.toSet()
-    val urls = lines.flatMap { line ->
-      val withoutEmails = Lexicons.EMAIL.replace(line.text, " ")
+    val urls = allLines.flatMap { line ->
+      val squeezed = EmailRepair.squeeze(line.text)
+      val withoutEmails = Lexicons.EMAIL.replace(squeezed, " ")
       Lexicons.URL.findAll(withoutEmails).map { it.value }
     }.map(::cleanUrl).filter { it.isNotBlank() }.distinct()
 
@@ -46,11 +51,12 @@ class HeuristicCardParser : CardParser {
     val addressLines = lines.filter { it !in consumed && looksLikeAddress(it.text) }
     val remaining = lines.filter { it !in consumed && it !in addressLines }
 
-    // Order matters: a job title is identified first, so a line like "Senior Solutions
-    // Engineer" cannot be claimed as the company by the word "Solutions".
+    // Order matters. Title first, so "Senior Solutions Engineer" cannot be claimed as the
+    // company by the word "Solutions". Then the name, so the domain-matching company fallback
+    // cannot claim a person whose surname is also the domain ("ines@okafor.studio").
     val title = pickTitle(remaining, null)
-    val company = pickCompany(remaining.filter { it != title }, emailDomains)
-    val name = pickName(remaining, emails, company, title)
+    val name = pickName(remaining.filter { it != title }, emails, null, title)
+    val company = pickCompany(remaining.filter { it != title && it != name }, emailDomains)
 
     val parsedName = splitName(name?.text.orEmpty())
 
@@ -74,10 +80,19 @@ class HeuristicCardParser : CardParser {
 
   private fun extractPhones(lines: List<OcrLine>, region: String): List<Phone> {
     val out = mutableListOf<Phone>()
+    // Two-column cards print the label ("Mobile") on its own line above the number, so carry a
+    // label-only line forward and apply it to the next number that has no label of its own.
+    var pendingLabel: PhoneType? = null
     lines.forEach { line ->
-      // A label can sit on its own line above or beside the number; when the line itself has
-      // no label, leave the type unset here and infer it afterwards from ordering.
-      out += PhoneNormalizer.extract(line.text, region, fallbackType = null)
+      val found = PhoneNormalizer.extract(line.text, region, fallbackType = pendingLabel)
+      if (found.isEmpty()) {
+        val labelOnly = !line.text.any(Char::isDigit) &&
+          line.text.trim().split(Regex("""\s+""")).size <= 2
+        if (labelOnly) PhoneNormalizer.typeFromLabel(line.text)?.let { pendingLabel = it }
+      } else {
+        out += found
+        pendingLabel = null
+      }
     }
     val deduped = out.distinctBy { it.number.filter(Char::isDigit) }
     // Unlabelled numbers: the first is usually the one the person wants reached on.
@@ -102,8 +117,9 @@ class HeuristicCardParser : CardParser {
   private fun cleanUrl(s: String) = s.trim().trim('.', ',', ';', ':', ')', '(')
 
   private fun isUrlOnly(text: String): Boolean {
-    val stripped = Lexicons.URL.replace(text, " ").replace(Regex("""[\s:|/]+"""), "")
-    return Lexicons.URL.containsMatchIn(text) &&
+    val squeezed = EmailRepair.squeeze(text)
+    val stripped = Lexicons.URL.replace(squeezed, " ").replace(Regex("""[\s:|/]+"""), "")
+    return Lexicons.URL.containsMatchIn(squeezed) &&
       stripped.lowercase().replace(Regex("(web|www|site|url)"), "").isBlank()
   }
 
@@ -116,7 +132,11 @@ class HeuristicCardParser : CardParser {
     val w = words(text)
     if (w.isEmpty()) return false
     val hasMarker = w.any { it.trim('.', ',') in Lexicons.ADDRESS_MARKERS }
-    val hasCountry = Lexicons.COUNTRIES.any { text.lowercase().contains(it) }
+    val lower = text.lowercase()
+    val hasCountry = Lexicons.COUNTRIES.any { country ->
+      // Whole-word match only: a substring test makes "Marcus" contain "us".
+      Regex("""(^|\W)${Regex.escape(country)}($|\W)""").containsMatchIn(lower)
+    }
     val hasNumber = text.any(Char::isDigit)
     val hasPostal = Lexicons.POSTAL_PATTERNS.take(3).any { it.containsMatchIn(text) }
     // A street line normally pairs a number with a street word; a city line pairs a
@@ -196,6 +216,8 @@ class HeuristicCardParser : CardParser {
       if (title != null && line.centerY < title.centerY) score += 8.0
       if (lw.any { it in Lexicons.NAME_PREFIXES || it in Lexicons.NAME_SUFFIXES }) score += 5.0
       if (line.text.any(Char::isDigit)) score -= 30.0
+      // A line carrying a company word is describing a business, not a person.
+      if (lw.any { it in Lexicons.COMPANY_WEAK || it in Lexicons.COMPANY_STRONG }) score -= 25.0
       score
     }
   }

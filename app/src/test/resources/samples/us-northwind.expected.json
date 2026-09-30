@@ -1,0 +1,31 @@
+{
+  "defaultRegion": "US",
+  "givenName": "Dana",
+  "middleName": "R.",
+  "familyName": "Whitfield",
+  "jobTitle": "Senior Operations Manager",
+  "company": "NORTHWIND LOGISTICS LTD",
+  "phones": [
+    {
+      "number": "+14155552671",
+      "type": "MOBILE"
+    },
+    {
+      "number": "+14155550119",
+      "type": "WORK"
+    },
+    {
+      "number": "+14155550188",
+      "type": "FAX_WORK"
+    }
+  ],
+  "emails": [
+    "dana.whitfield@northwindlogistics.com"
+  ],
+  "urls": [
+    "www.northwindlogistics.com"
+  ],
+  "address": "",
+  "note": "Synthetic. US layout, three labelled phones.",
+  "prefix": ""
+}

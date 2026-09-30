@@ -1,0 +1,23 @@
+{
+  "defaultRegion": "US",
+  "givenName": "Marcus",
+  "familyName": "Oyelaran",
+  "jobTitle": "Principal Security Engineer",
+  "company": "VANTA SECURITY LABS",
+  "phones": [
+    {
+      "number": "+12065550173",
+      "type": "MOBILE"
+    }
+  ],
+  "emails": [
+    "marcus@vantalabs.io"
+  ],
+  "urls": [
+    "vantalabs.io"
+  ],
+  "address": "",
+  "note": "Synthetic. Light text on dark. OCR split the email domain as 'vantalabs. io'.",
+  "prefix": "",
+  "middleName": ""
+}

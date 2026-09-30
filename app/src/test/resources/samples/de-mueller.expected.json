@@ -1,0 +1,25 @@
+{
+  "defaultRegion": "DE",
+  "prefix": "Dr.",
+  "givenName": "Katharina",
+  "familyName": "Müller",
+  "jobTitle": "Technische Leiterin",
+  "company": "Hochbrunn Systeme GmbH",
+  "phones": [
+    {
+      "number": "+4930901820",
+      "type": "WORK"
+    },
+    {
+      "number": "+4930901899",
+      "type": "FAX_WORK"
+    }
+  ],
+  "emails": [
+    "k.mueller@hochbrunn.de"
+  ],
+  "urls": [],
+  "address": "Zimmerstrasse 14, 10969 Berlin, Germany",
+  "note": "Synthetic. German, umlaut in surname, non-English job title.",
+  "middleName": ""
+}

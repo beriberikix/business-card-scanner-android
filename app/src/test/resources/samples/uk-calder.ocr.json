@@ -1,0 +1,82 @@
+{
+    "lines": [
+        {
+            "text": "Calder Wharf Studio",
+            "left": 62,
+            "top": 78,
+            "right": 391,
+            "bottom": 106,
+            "confidence": 0.88901657,
+            "language": "en"
+        },
+        {
+            "text": "Priya Ramanathan",
+            "left": 62,
+            "top": 177,
+            "right": 439,
+            "bottom": 224,
+            "confidence": 0.8721354,
+            "angle": -0.98548096,
+            "language": "und-Latn"
+        },
+        {
+            "text": "Head of Product Design,",
+            "left": 61,
+            "top": 236,
+            "right": 362,
+            "bottom": 266,
+            "confidence": 0.89921874,
+            "angle": 0.9894338,
+            "language": "en"
+        },
+        {
+            "text": "Europe",
+            "left": 61,
+            "top": 280,
+            "right": 149,
+            "bottom": 306,
+            "confidence": 0.8561198,
+            "angle": 1.6559211,
+            "language": "en"
+        },
+        {
+            "text": "Mobile +44 7911 123456",
+            "left": 62,
+            "top": 355,
+            "right": 333,
+            "bottom": 373,
+            "confidence": 0.89761513,
+            "language": "en"
+        },
+        {
+            "text": "Tel +44 20 7946 0821",
+            "left": 60,
+            "top": 395,
+            "right": 300,
+            "bottom": 413,
+            "confidence": 0.8991699,
+            "language": "en"
+        },
+        {
+            "text": "priya@calderwharf.co.uk",
+            "left": 61,
+            "top": 440,
+            "right": 333,
+            "bottom": 467,
+            "confidence": 0.8952106,
+            "angle": -0.5888699,
+            "language": "so"
+        },
+        {
+            "text": "18 Calder Wharf, Unit 4, Manchester M3 4LZ",
+            "left": 62,
+            "top": 494,
+            "right": 497,
+            "bottom": 512,
+            "confidence": 0.86328125,
+            "language": "en"
+        }
+    ],
+    "imageWidth": 1050,
+    "imageHeight": 600
+}

@@ -1,0 +1,78 @@
+{
+    "lines": [
+        {
+            "text": "NORTHWIND LOGISTICS LTD",
+            "left": 62,
+            "top": 68,
+            "right": 536,
+            "bottom": 91,
+            "confidence": 0.827567,
+            "language": "en"
+        },
+        {
+            "text": "Dana R. Whitfield",
+            "left": 63,
+            "top": 159,
+            "right": 435,
+            "bottom": 192,
+            "confidence": 0.8721354,
+            "language": "en"
+        },
+        {
+            "text": "Senior Operations Manager",
+            "left": 62,
+            "top": 221,
+            "right": 428,
+            "bottom": 249,
+            "confidence": 0.8806046,
+            "language": "sv"
+        },
+        {
+            "text": "M +1415 555 2671",
+            "left": 62,
+            "top": 316,
+            "right": 290,
+            "bottom": 334,
+            "confidence": 0.90685093,
+            "language": "en"
+        },
+        {
+            "text": "T +1 415 555 0119",
+            "left": 61,
+            "top": 358,
+            "right": 282,
+            "bottom": 376,
+            "confidence": 0.8374399,
+            "language": "en"
+        },
+        {
+            "text": "F +1415 555 0188",
+            "left": 62,
+            "top": 400,
+            "right": 284,
+            "bottom": 418,
+            "confidence": 0.85967547,
+            "language": "en"
+        },
+        {
+            "text": "dana.whitfield@northwindlogistics.com",
+            "left": 61,
+            "top": 457,
+            "right": 505,
+            "bottom": 481,
+            "confidence": 0.8391047,
+            "language": "en"
+        },
+        {
+            "text": "www.northwindlogistics.com",
+            "left": 60,
+            "top": 499,
+            "right": 382,
+            "bottom": 523,
+            "confidence": 0.8470553,
+            "language": "en"
+        }
+    ],
+    "imageWidth": 1050,
+    "imageHeight": 600
+}

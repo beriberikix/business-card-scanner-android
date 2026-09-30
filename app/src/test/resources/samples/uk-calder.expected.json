@@ -1,0 +1,25 @@
+{
+  "defaultRegion": "GB",
+  "givenName": "Priya",
+  "familyName": "Ramanathan",
+  "jobTitle": "Head of Product Design, Europe",
+  "company": "Calder Wharf Studio",
+  "phones": [
+    {
+      "number": "+447911123456",
+      "type": "MOBILE"
+    },
+    {
+      "number": "+442079460821",
+      "type": "WORK"
+    }
+  ],
+  "emails": [
+    "priya@calderwharf.co.uk"
+  ],
+  "urls": [],
+  "address": "18 Calder Wharf, Unit 4, Manchester M3 4LZ",
+  "note": "Synthetic. Title wraps across two lines with a trailing comma.",
+  "prefix": "",
+  "middleName": ""
+}

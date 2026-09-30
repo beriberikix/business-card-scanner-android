@@ -38,6 +38,15 @@ class PhoneNormalizerTest {
   }
 
   @Test
+  fun `numbers reserved for fiction are kept but flagged`() {
+    // Ofcom reserves +44 7700 900xxx for drama, and libphonenumber rejects the range. Keeping
+    // the raw text and flagging it is the right outcome: the review UI asks the user to check.
+    val p = PhoneNormalizer.toPhone("+44 7700 900312", "GB", PhoneType.MOBILE)
+    assertFalse(p.normalized)
+    assertEquals("+44 7700 900312", p.number)
+  }
+
+  @Test
   fun `ignores digit runs that are not phone numbers`() {
     assertTrue(PhoneNormalizer.extract("Suite 200, 1994", "US").isEmpty())
   }
