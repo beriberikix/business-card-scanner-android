@@ -49,6 +49,10 @@ internal object LineGrouper {
     val leftAligned = kotlin.math.abs(a.left - b.left) <= 0.25 * maxOf(a.width, b.width)
     if (!leftAligned) return false
 
+    // Capitals are a deliberate style choice on a card, so a change of case marks a change of
+    // field. This is checked before the comma rule because it is the stronger signal.
+    if (isAllCaps(a.text) != isAllCaps(b.text)) return false
+
     // A trailing comma is an explicit continuation mark, so trust it over style similarity.
     if (a.text.trimEnd().endsWith(',')) return true
 
@@ -71,8 +75,11 @@ internal object LineGrouper {
       !text.contains('©') &&
       !Lexicons.URL.containsMatchIn(text)
 
-  private fun isTitleText(text: String): Boolean =
-    text.lowercase()
-      .split(Regex("""[\s,/|•·]+"""))
-      .any { it.trim('.', ',') in Lexicons.TITLE_MARKERS }
+  private fun isTitleText(text: String): Boolean = TitleMatcher.isTitle(text)
+
+  /** A line set entirely in capitals, which cards use as a distinct style. */
+  private fun isAllCaps(text: String): Boolean {
+    val letters = text.filter(Char::isLetter)
+    return letters.length >= 2 && letters == letters.uppercase()
+  }
 }

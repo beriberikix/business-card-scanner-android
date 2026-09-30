@@ -68,7 +68,8 @@ internal object Lexicons {
     "suite", "ste", "ste.", "apt", "apartment", "unit", "floor", "fl", "flr", "building", "bldg",
     "po", "p.o.", "box", "wharf", "quay", "close", "crescent", "way", "walk", "gardens", "park",
     "strasse", "straße", "str", "str.", "platz", "weg", "allee", "gasse", "rue", "boulevard",
-    "avenida", "calle", "via", "piazza", "viale", "corso",
+    "avenida", "calle", "via", "piazza", "viale", "corso", "ring", "chaussee", "chaussée",
+    "damm", "ufer", "markt", "hof", "steig", "pfad",
   )
 
   val COUNTRIES = setOf(

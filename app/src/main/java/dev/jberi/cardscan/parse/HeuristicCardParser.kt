@@ -131,6 +131,9 @@ class HeuristicCardParser : CardParser {
   private fun looksLikeAddress(text: String): Boolean {
     val w = words(text)
     if (w.isEmpty()) return false
+    // a company line naming a country is a company that happens to name a country. A legal form outranks
+    // every address cue.
+    if (w.any { it.trim('.', ',') in Lexicons.COMPANY_STRONG }) return false
     val hasMarker = w.any { it.trim('.', ',') in Lexicons.ADDRESS_MARKERS }
     val lower = text.lowercase()
     val hasCountry = Lexicons.COUNTRIES.any { country ->
@@ -173,10 +176,7 @@ class HeuristicCardParser : CardParser {
     }
   }
 
-  private fun isTitleLine(text: String): Boolean {
-    val w = words(text).map { it.trim('.', ',') }
-    return w.any { it in Lexicons.TITLE_MARKERS } || text.contains(" of ", true)
-  }
+  private fun isTitleLine(text: String): Boolean = TitleMatcher.isTitle(text)
 
   private fun pickTitle(candidates: List<OcrLine>, company: OcrLine?): OcrLine? =
     candidates.firstOrNull { it != company && isTitleLine(it.text) }
@@ -207,7 +207,7 @@ class HeuristicCardParser : CardParser {
       val lw = words(line.text).map { it.trim('.', ',') }
 
       if (localTokens.isNotEmpty()) {
-        val hits = lw.count { w -> localTokens.any { it == w || (it.length > 3 && w.startsWith(it)) } }
+        val hits = lw.count { w -> localTokens.any { matchesLocalPart(it, w) } }
         score += hits * 40.0
       }
       score += (line.height.toDouble() / maxHeight) * 25.0
@@ -220,6 +220,20 @@ class HeuristicCardParser : CardParser {
       if (lw.any { it in Lexicons.COMPANY_WEAK || it in Lexicons.COMPANY_STRONG }) score -= 25.0
       score
     }
+  }
+
+  /**
+   * Whether a name word accounts for part of an email local part.
+   *
+   * Handles the three shapes cards actually use: "dana.whitfield" split into tokens,
+   * "marisolberenguer" run together, and "mberenguer" abbreviating the given name.
+   */
+  private fun matchesLocalPart(token: String, word: String): Boolean = when {
+    token == word -> true
+    word.length >= 3 && token.length > word.length &&
+      (token.startsWith(word) || token.endsWith(word)) -> true
+    token.length > 3 && word.startsWith(token) -> true
+    else -> false
   }
 
   private fun plausibleName(text: String): Boolean {

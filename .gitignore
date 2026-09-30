@@ -21,3 +21,5 @@ local.properties
 # Raw scans pulled off the phone: bulk captures of other people's contact details.
 # Promote individual cards into samples/ deliberately instead.
 /samples/scans/
+# Real scanned cards used for ad-hoc parser reports: other people's contact details.
+/app/src/test/resources/scans/
