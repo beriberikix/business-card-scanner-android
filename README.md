@@ -132,7 +132,7 @@ blocking the build.
 
 | Card | Shape it tests | Result |
 |---|---|---|
-| wrapped-name-broken-email | Real card. Name wrapped over two lines, email damaged by OCR | all fields correct |
+| wrapped-name-broken-email | Name wrapped over two lines, email damaged by OCR | all fields correct |
 | us-northwind | Three labelled phones, legal-form company | all fields correct |
 | uk-calder | Title wrapped with a trailing comma, UK numbers, postcode | all fields correct |
 | de-mueller | German, umlaut surname, non-English job title | all fields correct |
@@ -235,7 +235,13 @@ Repaired addresses are marked and shown to you with the raw text, because a repa
 ## Growing the test set
 
 Fixtures are real ML Kit output, recorded on the device and committed, so parser tests run on the
-JVM in seconds without a phone.
+JVM in seconds without a phone. They are generated from synthetic card images, with one exception:
+`wrapped-name-broken-email` was anonymised from a real scan. Its geometry, confidences and OCR
+damage are genuine; the name, phone number, email and domain are fabricated.
+
+**No real contact details belong in this repository.** It is public, and a fixture is a person's
+name, phone number and email in plain text. Keep real scans in the gitignored directories and
+anonymise anything you promote into `samples/`.
 
 ```bash
 ./tools/record-ocr-fixtures.sh   # regenerate synthetic cards and re-record their OCR
@@ -258,5 +264,5 @@ bottleneck, having the app dump a starter `expected.json` from its own parse wou
 from transcription into correction.
 
 **Privacy note:** a fixture contains the cardholder's real name, phone number and email address in
-plain text. `samples/wrapped-name-broken-email.*` is a real card. `samples/scans/` is gitignored for this
+plain text. `samples/scans/` and the ad-hoc report fixtures are gitignored for this
 reason; think before committing anything from it.

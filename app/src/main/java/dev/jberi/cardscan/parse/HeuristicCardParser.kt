@@ -17,6 +17,14 @@ import dev.jberi.cardscan.ocr.OcrResult
  */
 class HeuristicCardParser : CardParser {
 
+  private companion object {
+    /** Host components that name no company: subdomains and public suffixes. */
+    val IGNORED_HOST_PARTS = setOf(
+      "www", "com", "net", "org", "edu", "gov", "mil", "int", "info", "biz", "pro", "app",
+      "dev", "cloud", "online", "site", "xyz", "mail", "email", "web", "home", "corp",
+    )
+  }
+
   override fun parse(ocr: OcrResult, defaultRegion: String): ContactCard {
     val ordered = ocr.readingOrder().filter { it.text.isNotBlank() }
     if (ordered.isEmpty()) return ContactCard()
@@ -55,8 +63,11 @@ class HeuristicCardParser : CardParser {
     // company by the word "Solutions". Then the name, so the domain-matching company fallback
     // cannot claim a person whose surname is also the domain ("ines@okafor.studio").
     val title = pickTitle(remaining, null)
-    val name = pickName(remaining.filter { it != title }, emails, null, title)
-    val company = pickCompany(remaining.filter { it != title && it != name }, emailDomains)
+    // A card that shows its company only as a logo still names it in the website and email
+    // host, so those labels are evidence both for the company and against a line being a person.
+    val labels = domainLabels(emailDomains, urls)
+    val name = pickName(remaining.filter { it != title }, emails, null, title, labels)
+    val company = pickCompany(remaining.filter { it != title && it != name }, labels)
 
     val parsedName = splitName(name?.text.orEmpty())
 
@@ -147,7 +158,25 @@ class HeuristicCardParser : CardParser {
     return (hasMarker && hasNumber) || hasCountry || (hasPostal && w.size <= 5 && hasNumber)
   }
 
-  private fun pickCompany(candidates: List<OcrLine>, emailDomains: Set<String>): OcrLine? {
+  /** Host names reduced to their identifying label: "www.veltrix.com" and "veltrix.com" give "veltrix". */
+  private fun domainLabels(emailDomains: Set<String>, urls: List<String>): Set<String> {
+    val hosts = emailDomains + urls.map { url ->
+      url.substringAfter("://").substringBefore('/')
+    }
+    return hosts.flatMap { host ->
+      host.lowercase().split('.').filter { it.length > 2 && it !in IGNORED_HOST_PARTS }
+    }.toSet()
+  }
+
+  /** Whether a line reads as the company behind one of those hosts. */
+  private fun matchesDomainLabel(text: String, labels: Set<String>): Boolean {
+    if (labels.isEmpty()) return false
+    val squashed = text.lowercase().filter(Char::isLetterOrDigit)
+    if (squashed.length < 3) return false
+    return labels.any { squashed.contains(it) || (it.contains(squashed) && squashed.length > 3) }
+  }
+
+  private fun pickCompany(candidates: List<OcrLine>, labels: Set<String>): OcrLine? {
     // A legal form ("Ltd", "GmbH") is decisive.
     candidates.firstOrNull { line ->
       words(line.text).any { it.trim('.', ',') in Lexicons.COMPANY_STRONG }
@@ -158,16 +187,8 @@ class HeuristicCardParser : CardParser {
       !isTitleLine(line.text) && words(line.text).any { it.trim('.', ',') in Lexicons.COMPANY_WEAK }
     }?.let { return it }
 
-    // Otherwise, a line matching the email domain's own label.
-    val labels = emailDomains.mapNotNull { d ->
-      d.split('.').firstOrNull { it.length > 2 && it != "www" }?.lowercase()
-    }
-    if (labels.isNotEmpty()) {
-      candidates.firstOrNull { line ->
-        val squashed = line.text.lowercase().filter(Char::isLetterOrDigit)
-        labels.any { squashed.contains(it) || it.contains(squashed) && squashed.length > 3 }
-      }?.let { return it }
-    }
+    // Otherwise, a line that matches the label of a host the card advertises.
+    candidates.firstOrNull { matchesDomainLabel(it.text, labels) }?.let { return it }
 
     // Last resort: an all-caps line, which cards commonly use for the company.
     return candidates.firstOrNull { line ->
@@ -190,6 +211,7 @@ class HeuristicCardParser : CardParser {
     emails: List<Email>,
     company: OcrLine?,
     title: OcrLine?,
+    domainLabels: Set<String>,
   ): OcrLine? {
     val pool = candidates.filter { it != company && it != title && plausibleName(it.text) }
     if (pool.isEmpty()) return null
@@ -218,6 +240,9 @@ class HeuristicCardParser : CardParser {
       if (line.text.any(Char::isDigit)) score -= 30.0
       // A line carrying a company word is describing a business, not a person.
       if (lw.any { it in Lexicons.COMPANY_WEAK || it in Lexicons.COMPANY_STRONG }) score -= 25.0
+      // Nor is a line that spells out the website's own name. This is decisive rather than a
+      // nudge, because a company is often set in larger type than the person.
+      if (matchesDomainLabel(line.text, domainLabels)) score -= 30.0
       score
     }
   }

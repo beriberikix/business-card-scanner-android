@@ -16,7 +16,7 @@ class EmailRepairTest {
 
   @Test
   fun `restores a dot OCR dropped before the TLD`() {
-    // The exact failure seen on a real card: "marisol@veltrix.io" read as "marisol@veltrixio".
+    // The exact failure seen on a real card, anonymised: the dot before the TLD is dropped.
     val e = EmailRepair.extract("marisol@veltrixio").single()
     assertEquals("marisol@veltrix.io", e.address)
     assertTrue(e.repaired)

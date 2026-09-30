@@ -1,0 +1,75 @@
+{
+  "lines": [
+    {
+      "text": "Marisol",
+      "left": 106,
+      "top": 143,
+      "right": 620,
+      "bottom": 237,
+      "confidence": 0.83528644,
+      "angle": 0.82465005,
+      "language": "ga"
+    },
+    {
+      "text": "Berenguer",
+      "left": 132,
+      "top": 260,
+      "right": 748,
+      "bottom": 368,
+      "confidence": 0.85195315,
+      "language": "und-Latn"
+    },
+    {
+      "text": "Senior Solutions Engineer,",
+      "left": 149,
+      "top": 368,
+      "right": 1122,
+      "bottom": 453,
+      "confidence": 0.8457031,
+      "angle": 0.9306925,
+      "language": "en"
+    },
+    {
+      "text": "Americas",
+      "left": 174,
+      "top": 452,
+      "right": 519,
+      "bottom": 513,
+      "confidence": 0.86865234,
+      "angle": 0.95571053,
+      "language": "en"
+    },
+    {
+      "text": "+12135550147",
+      "left": 195,
+      "top": 571,
+      "right": 582,
+      "bottom": 616,
+      "confidence": 0.80371094,
+      "angle": 0.62974745,
+      "language": "am"
+    },
+    {
+      "text": "marisol@veltrixio",
+      "left": 203,
+      "top": 625,
+      "right": 719,
+      "bottom": 676,
+      "confidence": 0.780413,
+      "angle": 0.5851286,
+      "language": "und-Latn"
+    },
+    {
+      "text": "veltrix.io",
+      "left": 224,
+      "top": 719,
+      "right": 514,
+      "bottom": 765,
+      "confidence": 0.7739258,
+      "angle": -0.79161406,
+      "language": "pt"
+    }
+  ],
+  "imageWidth": 1472,
+  "imageHeight": 843
+}

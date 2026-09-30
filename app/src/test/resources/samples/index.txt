@@ -1,7 +1,7 @@
 dark-vanta
 de-mueller
-wrapped-name-broken-email
 minimal
 two-column
 uk-calder
 us-northwind
+wrapped-name-broken-email

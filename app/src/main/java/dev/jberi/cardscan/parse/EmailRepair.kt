@@ -6,7 +6,7 @@ import dev.jberi.cardscan.model.Email
  * Recovers email addresses that OCR damaged.
  *
  * Three failures show up repeatedly on real cards, all seen in this project's own samples:
- * a dot swallowed before the top-level domain ("marisol@veltrix.io" read as "marisol@veltrixio"),
+ * a dot swallowed before the top-level domain ("ada@lumen.io" read as "ada@lumenio"),
  * a space inserted around the dot ("marcus@vantalabs. io"), and a space before the at sign
  * ("sofia @mvlaw.com"). Each makes the address fail a strict regex.
  *

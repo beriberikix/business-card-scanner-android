@@ -1,0 +1,23 @@
+{
+  "note": "Anonymised from a real scan on a Pixel 10a. The geometry, confidences and OCR damage are genuine; the identity is fabricated. OCR dropped the dot before the top-level domain.",
+  "defaultRegion": "US",
+  "prefix": "",
+  "givenName": "Marisol",
+  "middleName": "",
+  "familyName": "Berenguer",
+  "jobTitle": "Senior Solutions Engineer, Americas",
+  "company": "",
+  "phones": [
+    {
+      "number": "+12135550147",
+      "type": "WORK"
+    }
+  ],
+  "emails": [
+    "marisol@veltrix.io"
+  ],
+  "urls": [
+    "veltrix.io"
+  ],
+  "address": ""
+}
