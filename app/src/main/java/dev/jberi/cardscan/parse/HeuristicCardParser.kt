@@ -142,9 +142,12 @@ class HeuristicCardParser : CardParser {
   private fun looksLikeAddress(text: String): Boolean {
     val w = words(text)
     if (w.isEmpty()) return false
-    // a company line naming a country is a company that happens to name a country. A legal form outranks
-    // every address cue.
+    // A company or a job title can name a country without being an address: a line carrying a
+    // legal form is a company, and "Sales Director Eastern USA/Canada" is a title. Both outrank
+    // every address cue. Misreading either loses the field outright, because address lines are
+    // removed from the pool before the title and company are chosen.
     if (w.any { it.trim('.', ',') in Lexicons.COMPANY_STRONG }) return false
+    if (TitleMatcher.isTitle(text)) return false
     val hasMarker = w.any { it.trim('.', ',') in Lexicons.ADDRESS_MARKERS }
     val lower = text.lowercase()
     val hasCountry = Lexicons.COUNTRIES.any { country ->
@@ -182,13 +185,15 @@ class HeuristicCardParser : CardParser {
       words(line.text).any { it.trim('.', ',') in Lexicons.COMPANY_STRONG }
     }?.let { return it }
 
+    // A line naming the host the card advertises. Checked before generic industry words,
+    // because a tagline such as "Enterprise Digital Twin" contains one of those words and would
+    // otherwise beat the company name printed right beside it.
+    candidates.firstOrNull { matchesDomainLabel(it.text, labels) }?.let { return it }
+
     // Industry words only count on a line that is not itself a job title.
     candidates.firstOrNull { line ->
       !isTitleLine(line.text) && words(line.text).any { it.trim('.', ',') in Lexicons.COMPANY_WEAK }
     }?.let { return it }
-
-    // Otherwise, a line that matches the label of a host the card advertises.
-    candidates.firstOrNull { matchesDomainLabel(it.text, labels) }?.let { return it }
 
     // Last resort: an all-caps line, which cards commonly use for the company.
     return candidates.firstOrNull { line ->

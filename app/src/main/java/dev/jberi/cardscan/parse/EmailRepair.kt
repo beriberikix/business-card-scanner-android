@@ -37,20 +37,77 @@ object EmailRepair {
   )
 
   /** Removes the spaces OCR inserted around at signs and dots. */
-  fun squeeze(text: String): String = text
-    .replace(Regex("""\s*[$AT_CHARS]\s*"""), "@")
-    .replace(Regex("""(?<=[A-Za-z0-9])\s*\.\s*(?=[A-Za-z0-9])"""), ".")
+  fun squeeze(text: String): String = squeezeIndexed(text).first
+
+  /**
+   * Squeezes [text] and records, for each character of the result, where it came from.
+   *
+   * The map is what lets a repaired address still report the characters OCR actually produced.
+   * Without it a match found in the squeezed text can only be described by the squeezed text,
+   * and the review screen would claim an address was repaired from itself.
+   */
+  private fun squeezeIndexed(text: String): Pair<String, IntArray> {
+    val sb = StringBuilder(text.length)
+    val map = ArrayList<Int>(text.length)
+    var i = 0
+    while (i < text.length) {
+      val c = text[i]
+      when {
+        c.isWhitespace() -> {
+          var j = i
+          while (j < text.length && text[j].isWhitespace()) j++
+          val next = text.getOrNull(j)
+          val prev = sb.lastOrNull()
+          // Drop the run only when it brackets an at sign, or a dot between two characters
+          // that belong to an address.
+          val bracketsAt = next != null && next in AT_CHARS
+          val bracketsDot = next == '.' && prev != null && prev.isLetterOrDigit()
+          if (bracketsAt || bracketsDot) {
+            i = j
+          } else {
+            sb.append(c); map.add(i); i++
+          }
+        }
+        c in AT_CHARS -> {
+          sb.append('@'); map.add(i); i++
+          while (i < text.length && text[i].isWhitespace()) i++
+        }
+        c == '.' && sb.lastOrNull()?.isLetterOrDigit() == true -> {
+          sb.append('.'); map.add(i); i++
+          var j = i
+          while (j < text.length && text[j].isWhitespace()) j++
+          if (text.getOrNull(j)?.isLetterOrDigit() == true) i = j
+        }
+        else -> { sb.append(c); map.add(i); i++ }
+      }
+    }
+    return sb.toString() to map.toIntArray()
+  }
 
   /** Every address on the line: strict matches if there are any, otherwise repair attempts. */
   fun extract(line: String): List<Email> {
-    val strict = Lexicons.EMAIL.findAll(line)
-      .map { Email(it.value.lowercase().trim('.', ',', ';', ':')) }
-      .toList()
+    // Everything is matched against the squeezed text rather than the raw line. Matching the
+    // raw line is not merely weaker, it is actively wrong: OCR splits a local part with a stray
+    // space ("andrew. worth@..."), and a strict match then succeeds on the second half alone,
+    // yielding a plausible but truncated address with nothing to signal the loss. On an
+    // undamaged line squeezing changes nothing, so clean addresses behave exactly as before.
+    val (squeezed, map) = squeezeIndexed(line)
+
+    fun sourceText(range: IntRange) =
+      line.substring(map[range.first], map[range.last] + 1).trim()
+
+    val strict = Lexicons.EMAIL.findAll(squeezed).map { m ->
+      val address = m.value.lowercase().trim('.', ',', ';', ':')
+      val raw = sourceText(m.range)
+      Email(address = address, raw = raw, repaired = !address.equals(raw, ignoreCase = true))
+    }.toList()
     if (strict.isNotEmpty()) return strict
 
-    return LOOSE.findAll(line).mapNotNull { m ->
-      val raw = m.value
-      repair(raw)?.let { Email(address = it, raw = raw.trim(), repaired = true) }
+    return LOOSE.findAll(squeezed).mapNotNull { m ->
+      val raw = sourceText(m.range)
+      repair(m.value)?.let { fixed ->
+        Email(address = fixed, raw = raw, repaired = !fixed.equals(raw, ignoreCase = true))
+      }
     }.toList()
   }
 

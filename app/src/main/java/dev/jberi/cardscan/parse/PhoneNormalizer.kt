@@ -78,23 +78,40 @@ object PhoneNormalizer {
     }.toList()
   }
 
+  /** Fewest digits worth retrying as an international number. */
+  private const val MIN_INTERNATIONAL_DIGITS = 8
+
   /** Normalizes one raw string to E.164, falling back to the cleaned original when invalid. */
   fun toPhone(raw: String, defaultRegion: String, type: PhoneType): Phone {
     val repaired = repairDigits(raw)
-    return try {
-      val parsed = util.parse(repaired, defaultRegion)
-      if (util.isValidNumber(parsed)) {
-        Phone(
-          number = util.format(parsed, PhoneNumberUtil.PhoneNumberFormat.E164),
-          type = type,
-          raw = raw,
-          normalized = true,
-        )
-      } else {
-        Phone(number = repaired.trim(), type = type, raw = raw, normalized = false)
-      }
-    } catch (_: NumberParseException) {
-      Phone(number = repaired.trim(), type = type, raw = raw, normalized = false)
+    e164(repaired, defaultRegion)?.let {
+      return Phone(number = it, type = type, raw = raw, normalized = true)
     }
+
+    // A leading "+" often ends up attached to the label beside it, so the card reads
+    // "M+ 49 172 ..." and the number arrives here without it. Retrying as international
+    // recovers a foreign number that cannot be valid in the local region.
+    if (!repaired.trimStart().startsWith("+")) {
+      val digits = repaired.filter(Char::isDigit)
+      if (digits.length >= MIN_INTERNATIONAL_DIGITS) {
+        e164("+$digits", defaultRegion)?.let {
+          return Phone(number = it, type = type, raw = raw, normalized = true)
+        }
+      }
+    }
+
+    return Phone(number = repaired.trim(), type = type, raw = raw, normalized = false)
+  }
+
+  /** E.164 for a number that parses and validates, otherwise null. */
+  private fun e164(candidate: String, region: String): String? = try {
+    val parsed = util.parse(candidate, region)
+    if (util.isValidNumber(parsed)) {
+      util.format(parsed, PhoneNumberUtil.PhoneNumberFormat.E164)
+    } else {
+      null
+    }
+  } catch (_: NumberParseException) {
+    null
   }
 }
