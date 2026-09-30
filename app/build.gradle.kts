@@ -73,10 +73,14 @@ dependencies {
 
   implementation(libs.kotlinx.coroutines.play.services)
   implementation(libs.kotlinx.serialization.json)
+  // Apache-2. Used instead of android.telephony.PhoneNumberUtils so number normalization is
+  // exercised by plain JVM unit tests rather than needing a device or Robolectric.
+  implementation(libs.libphonenumber)
 
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.kotlinx.serialization.json)
+  testImplementation(libs.libphonenumber)
 
   androidTestImplementation(libs.androidx.test.core)
   androidTestImplementation(libs.androidx.test.ext.junit)

@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--
+      No permissions are declared on purpose. The document scanner UI and camera run inside
+      Play services, image import uses the permissionless photo picker, and saving goes through
+      the system contact editor via an insert intent.
+    -->
+
+    <!-- Needed only so the contact editor intent can be resolved before launching it. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.INSERT" />
+            <data android:mimeType="vnd.android.cursor.dir/raw_contact" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -9,6 +23,7 @@
         android:supportsRtl="true"
         android:windowSoftInputMode="adjustResize"
         android:theme="@style/Theme.CardScanner">
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -16,7 +31,21 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Accept a card photo shared from Photos, Files, a browser, etc. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
         </activity>
+
+        <!--
+          Ask Play services to fetch the document scanner module at install time rather than on
+          first tap. Harmless if it does not run; the module is also fetched lazily.
+        -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="docscan" />
     </application>
 
 </manifest>

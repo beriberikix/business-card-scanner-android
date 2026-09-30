@@ -16,6 +16,7 @@ mlkitBarcode = "17.3.0"
 mlkitDocScanner = "16.0.0"
 mlkitGenaiPrompt = "1.0.0-beta4"
 kotlinxSerialization = "1.9.0"
+libphonenumber = "9.0.40"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
@@ -42,6 +43,7 @@ mlkit-document-scanner = { module = "com.google.android.gms:play-services-mlkit-
 mlkit-genai-prompt = { module = "com.google.mlkit:genai-prompt", version.ref = "mlkitGenaiPrompt" }
 kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+libphonenumber = { module = "com.googlecode.libphonenumber:libphonenumber", version.ref = "libphonenumber" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
