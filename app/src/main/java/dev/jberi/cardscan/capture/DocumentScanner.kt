@@ -14,13 +14,20 @@ import kotlinx.coroutines.tasks.await
  * services, so this app needs no CAMERA permission and no viewfinder code. The module is
  * downloaded once on first use; after that it works offline.
  *
- * Page limit is 2 so both sides of a card can be captured in one pass.
+ * The page limit is deliberately high. The scanner keeps the camera open until you finish, so a
+ * whole stack of cards can be captured in one uninterrupted session and each page comes back as a
+ * separate image. That is the fast way to build a fixture set, and it keeps the crop and
+ * perspective correction that make those fixtures match what the app really sees.
  */
 object DocumentScanner {
+
+  /** Cards per scanning session. High enough for a stack, bounded so memory stays predictable. */
+  const val PAGE_LIMIT = 20
+
   private val options = GmsDocumentScannerOptions.Builder()
     .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_BASE)
     .setGalleryImportAllowed(true)
-    .setPageLimit(2)
+    .setPageLimit(PAGE_LIMIT)
     .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_JPEG)
     .build()
 

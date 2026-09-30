@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dev.jberi.cardscan.capture.loadBitmapForOcr
+import dev.jberi.cardscan.capture.toPreview
 import dev.jberi.cardscan.model.ContactCard
 import dev.jberi.cardscan.ocr.MlKitOcrEngine
 import dev.jberi.cardscan.ocr.OcrResult
@@ -26,15 +27,25 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/** One scanned card: a preview to show, the OCR behind it, and the fields parsed out. */
+data class CardResult(
+  val preview: Bitmap,
+  val ocr: OcrResult,
+  val card: ContactCard,
+  val fromBarcode: Boolean,
+  val ocrMillis: Long,
+)
+
 data class ScanUiState(
   val busy: Boolean = false,
-  val bitmap: Bitmap? = null,
-  val ocr: OcrResult? = null,
-  val card: ContactCard? = null,
-  val fromBarcode: Boolean = false,
+  val progress: String = "",
+  val results: List<CardResult> = emptyList(),
+  val index: Int = 0,
   val error: String? = null,
-  val ocrMillis: Long = 0,
-)
+) {
+  val current: CardResult? get() = results.getOrNull(index)
+  val total: Int get() = results.size
+}
 
 class ScanViewModel(app: Application) : AndroidViewModel(app) {
   private val ocrEngine = MlKitOcrEngine()
@@ -44,38 +55,63 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
   private val _state = MutableStateFlow(ScanUiState())
   val state: StateFlow<ScanUiState> = _state.asStateFlow()
 
-  /** Runs the whole pipeline on one captured image: decode, barcode, OCR, parse. */
   /** When on, each scan is kept on the device so it can be pulled into the test fixture set. */
   var keepForTesting: Boolean = true
 
-  fun process(uri: Uri, defaultRegion: String = "US") {
+  /**
+   * Runs the pipeline over every page of a scanning session, one card per page.
+   *
+   * Pages are processed in order and appended as they finish, so the first card is reviewable
+   * while the rest are still being read.
+   */
+  fun process(uris: List<Uri>, defaultRegion: String = "US") {
+    if (uris.isEmpty()) return
     viewModelScope.launch {
-      _state.value = ScanUiState(busy = true)
-      try {
-        val bmp = loadBitmapForOcr(getApplication(), uri)
-        val t0 = System.currentTimeMillis()
-        val ocr = withContext(Dispatchers.Default) { ocrEngine.recognize(bmp) }
-        val ocrMs = System.currentTimeMillis() - t0
+      _state.value = ScanUiState(busy = true, progress = progressText(0, uris.size))
+      val done = mutableListOf<CardResult>()
 
-        // A vCard barcode is exact data, so it wins over anything parsed from pixels.
-        val fromQr = runCatching { barcode.detect(bmp) }.getOrNull()
-        val card = fromQr ?: parser.parse(ocr, defaultRegion)
+      uris.forEachIndexed { i, uri ->
+        _state.update { it.copy(progress = progressText(i, uris.size)) }
+        try {
+          done += readCard(uri, defaultRegion)
+          _state.update { it.copy(results = done.toList()) }
+        } catch (t: Throwable) {
+          Log.e(TAG, "page ${i + 1} failed", t)
+          // One unreadable page should not discard the rest of the stack.
+          _state.update {
+            it.copy(error = "Card ${i + 1} could not be read: ${t.message}")
+          }
+        }
+      }
 
-        Log.i(TAG, "ocr ${ocr.lines.size} lines in ${ocrMs}ms, barcode=${fromQr != null}")
-        if (keepForTesting) saveForTesting(bmp, ocr)
-
-        _state.value = ScanUiState(
-          bitmap = bmp,
-          ocr = ocr,
-          card = card,
-          fromBarcode = fromQr != null,
-          ocrMillis = ocrMs,
+      _state.update {
+        it.copy(
+          busy = false,
+          progress = "",
+          error = if (done.isEmpty()) (it.error ?: "Nothing could be read") else it.error,
         )
-      } catch (t: Throwable) {
-        Log.e(TAG, "pipeline failed", t)
-        _state.value = ScanUiState(error = "${t::class.java.simpleName}: ${t.message}")
       }
     }
+  }
+
+  private fun progressText(doneCount: Int, total: Int) =
+    if (total == 1) "Reading card" else "Reading card ${doneCount + 1} of $total"
+
+  private suspend fun readCard(uri: Uri, defaultRegion: String): CardResult {
+    val full = loadBitmapForOcr(getApplication(), uri)
+    val t0 = System.currentTimeMillis()
+    val ocr = withContext(Dispatchers.Default) { ocrEngine.recognize(full) }
+    val ocrMs = System.currentTimeMillis() - t0
+
+    // A vCard barcode is exact data, so it wins over anything parsed from pixels.
+    val fromQr = runCatching { barcode.detect(full) }.getOrNull()
+    val card = fromQr ?: parser.parse(ocr, defaultRegion)
+
+    Log.i(TAG, "ocr ${ocr.lines.size} lines in ${ocrMs}ms, barcode=${fromQr != null}")
+    if (keepForTesting) saveForTesting(full, ocr)
+
+    // Drop the full-resolution bitmap here: a stack of twenty would not fit in memory.
+    return CardResult(full.toPreview(), ocr, card, fromQr != null, ocrMs)
   }
 
   /**
@@ -87,7 +123,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
     runCatching {
       val dir = File(getApplication<Application>().getExternalFilesDir(null), "captures")
         .apply { mkdirs() }
-      val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
+      val stamp = SimpleDateFormat("yyyyMMdd-HHmmss-SSS", Locale.US).format(Date())
       File(dir, "$stamp.jpg").outputStream().use {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 92, it)
       }
@@ -97,8 +133,22 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
     Unit
   }
 
-  /** Re-parses the existing OCR result; used after the parser changes or a page is added. */
-  fun edited(card: ContactCard) = _state.update { it.copy(card = card) }
+  /** Applies an edit from the review screen to the card currently being shown. */
+  fun edited(card: ContactCard) = _state.update { s ->
+    val updated = s.results.toMutableList()
+    val at = s.index
+    if (at !in updated.indices) return@update s
+    updated[at] = updated[at].copy(card = card)
+    s.copy(results = updated)
+  }
+
+  fun show(index: Int) = _state.update {
+    it.copy(index = index.coerceIn(0, (it.results.size - 1).coerceAtLeast(0)))
+  }
+
+  fun next() = show(_state.value.index + 1)
+
+  fun previous() = show(_state.value.index - 1)
 
   fun reset() = _state.update { ScanUiState() }
 

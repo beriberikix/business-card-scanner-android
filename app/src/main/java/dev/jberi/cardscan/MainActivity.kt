@@ -90,23 +90,23 @@ private fun AppScreen(modifier: Modifier = Modifier, initialUri: Uri? = null) {
       ?: context.resources.configuration.locales[0].country).uppercase()
   }
 
-  LaunchedEffect(initialUri) { initialUri?.let { vm.process(it, region) } }
+  LaunchedEffect(initialUri) { initialUri?.let { vm.process(listOf(it), region) } }
 
   val scanLauncher = rememberLauncherForActivityResult(
     ActivityResultContracts.StartIntentSenderForResult(),
   ) { result ->
-    val uri = DocumentScanner.pagesFrom(result.data).firstOrNull()
-    if (uri != null) vm.process(uri, region)
+    // Every page of the session is its own card, so a whole stack can be captured in one go.
+    vm.process(DocumentScanner.pagesFrom(result.data), region)
   }
 
   val pickLauncher = rememberLauncherForActivityResult(
     ActivityResultContracts.PickVisualMedia(),
-  ) { uri -> if (uri != null) vm.process(uri, region) }
+  ) { uri -> if (uri != null) vm.process(listOf(uri), region) }
 
-  val card = state.card
+  val result = state.current
 
   Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-    if (card == null) {
+    if (result == null) {
       Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(
           enabled = !state.busy,
@@ -121,7 +121,7 @@ private fun AppScreen(modifier: Modifier = Modifier, initialUri: Uri? = null) {
               }
             }
           },
-        ) { Text("Scan card") }
+        ) { Text("Scan cards") }
 
         OutlinedButton(
           enabled = !state.busy,
@@ -141,8 +141,19 @@ private fun AppScreen(modifier: Modifier = Modifier, initialUri: Uri? = null) {
           Text("Keep scans on device for parser testing")
         }
 
-        if (state.busy) CircularProgressIndicator()
+        if (state.busy) {
+          Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            CircularProgressIndicator()
+            Text(state.progress, Modifier.padding(start = 12.dp))
+          }
+        }
         state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+
+        Text(
+          "Scanning keeps the camera open. Capture a whole stack in one session and each " +
+            "card comes back separately, up to ${DocumentScanner.PAGE_LIMIT}.",
+          style = MaterialTheme.typography.bodySmall,
+        )
 
         HorizontalDivider(Modifier.padding(top = 16.dp))
         TextButton(onClick = {
@@ -151,17 +162,38 @@ private fun AppScreen(modifier: Modifier = Modifier, initialUri: Uri? = null) {
         diagnostics?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
       }
     } else {
-      state.bitmap?.let { bmp ->
-        Image(
-          bitmap = bmp.asImageBitmap(),
-          contentDescription = "Captured card",
-          modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp),
-          contentScale = ContentScale.Fit,
-        )
+      if (state.total > 1) {
+        Row(
+          Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        ) {
+          OutlinedButton(enabled = state.index > 0, onClick = vm::previous) { Text("Previous") }
+          Text("Card ${state.index + 1} of ${state.total}")
+          OutlinedButton(
+            enabled = state.index < state.total - 1,
+            onClick = vm::next,
+          ) { Text("Next") }
+        }
       }
+      if (state.busy) {
+        Row(
+          Modifier.padding(horizontal = 16.dp),
+          verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        ) {
+          CircularProgressIndicator(Modifier.padding(end = 12.dp))
+          Text(state.progress, style = MaterialTheme.typography.bodySmall)
+        }
+      }
+      Image(
+        bitmap = result.preview.asImageBitmap(),
+        contentDescription = "Captured card",
+        modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp),
+        contentScale = ContentScale.Fit,
+      )
       ReviewScreen(
-        card = card,
-        fromBarcode = state.fromBarcode,
+        card = result.card,
+        fromBarcode = result.fromBarcode,
         onChange = vm::edited,
         onRescan = vm::reset,
         onSave = { c ->
@@ -174,7 +206,7 @@ private fun AppScreen(modifier: Modifier = Modifier, initialUri: Uri? = null) {
       )
       Row(Modifier.padding(16.dp)) {
         Text(
-          "OCR: ${state.ocr?.lines?.size ?: 0} lines in ${state.ocrMillis} ms",
+          "OCR: ${result.ocr.lines.size} lines in ${result.ocrMillis} ms",
           style = MaterialTheme.typography.labelSmall,
         )
       }

@@ -31,9 +31,13 @@ for every ABI, which roughly doubles the size.
 
 ## Using it
 
-Three ways in: **Scan card** opens the ML Kit document scanner, **Import image** opens the system
+Three ways in: **Scan cards** opens the ML Kit document scanner, **Import image** opens the system
 photo picker, and the app also registers as a share target for `image/*`, so you can share a photo
 to it from anywhere.
+
+Scanning keeps the camera open, so you can photograph a whole stack in one session without
+returning to the app between cards. Each page comes back as its own card, up to 20 per session,
+and the review screen gets Previous and Next controls to step through them.
 
 The parsed fields appear in an editable form. Anything the parser is unsure about is flagged:
 a phone number that could not be normalized to E.164, or an email address reconstructed after OCR
@@ -113,6 +117,12 @@ proprietary piece, and dropping that in favour of the photo picker would make th
   vCard, its data is exact and overrides the OCR parse.
 - **Scans are kept on the device by default** (toggle on the home screen) so real cards can be
   promoted into the test suite. See "Growing the test set".
+- **One scanning session, many cards.** The page limit is 20 rather than 1, and every page is
+  parsed as a separate card. This is what makes collecting a real fixture set practical, and
+  unlike photographing cards with the camera app it keeps the scanner's crop and perspective
+  correction, so the fixtures match what the app actually sees in use.
+- **Only a downscaled preview is retained per card.** Twenty full-resolution bitmaps would cost
+  hundreds of megabytes, so the full image is released once OCR and the fixture dump are done.
 
 ## Accuracy
 
@@ -191,10 +201,20 @@ JVM in seconds without a phone.
 ./tools/pull-scans.sh            # copy scans kept on the phone into samples/scans/
 ```
 
-To promote a real card into the suite: scan it in the app with the toggle on, run
-`tools/pull-scans.sh`, then copy the `.ocr.json` to `samples/<name>.ocr.json` and to
+To add real cards, scan a stack in one session with the keep-scans toggle on, then:
+
+```bash
+./tools/pull-scans.sh              # every card lands in samples/scans/ as a .jpg + .ocr.json pair
+```
+
+For each card worth keeping, copy its `.ocr.json` to `samples/<name>.ocr.json` and to
 `app/src/test/resources/samples/`, write `<name>.expected.json` next to it, and add `<name>` to
-`app/src/test/resources/samples/index.txt`.
+`app/src/test/resources/samples/index.txt`. Then `./gradlew testDebugUnitTest` scores the parser
+against it.
+
+Writing the expected files by hand is now the slow part, not the capturing. If that becomes the
+bottleneck, having the app dump a starter `expected.json` from its own parse would turn the job
+from transcription into correction.
 
 **Privacy note:** a fixture contains the cardholder's real name, phone number and email address in
 plain text. `samples/wrapped-name-broken-email.*` is a real card. `samples/scans/` is gitignored for this
