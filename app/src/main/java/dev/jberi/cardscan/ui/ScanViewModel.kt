@@ -6,6 +6,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.mlkit.common.MlKitException
 import dev.jberi.cardscan.capture.loadBitmapForOcr
 import dev.jberi.cardscan.capture.toPreview
 import dev.jberi.cardscan.model.ContactCard
@@ -79,7 +80,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
           Log.e(TAG, "page ${i + 1} failed", t)
           // One unreadable page should not discard the rest of the stack.
           _state.update {
-            it.copy(error = "Card ${i + 1} could not be read: ${t.message}")
+            it.copy(error = "Card ${i + 1} could not be read: ${describe(t)}")
           }
         }
       }
@@ -93,6 +94,14 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
       }
     }
   }
+
+  /** The OCR model comes from Play services, so the first scan after install can beat it here. */
+  private fun describe(t: Throwable): String? =
+    if (t is MlKitException && t.errorCode == MlKitException.UNAVAILABLE) {
+      "the text recognition model is still downloading. Try again in a minute."
+    } else {
+      t.message
+    }
 
   private fun progressText(doneCount: Int, total: Int) =
     if (total == 1) "Reading card" else "Reading card ${doneCount + 1} of $total"

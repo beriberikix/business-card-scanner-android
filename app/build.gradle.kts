@@ -15,8 +15,8 @@ android {
     versionCode = 1
     versionName = "1.0"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    // Personal app, single target device. Bundled ML Kit models ship a .so per ABI,
-    // so restricting to arm64 cuts the APK roughly in half.
+    // Personal app, single target device. Native libraries ship once per ABI, so restricting
+    // to arm64 keeps the APK small. (OCR and barcode models now come from Play services.)
     ndk { abiFilters += "arm64-v8a" }
   }
 

@@ -25,9 +25,11 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ./gradlew testDebugUnitTest                  # parser accuracy + unit tests, no device needed
 ```
 
-The debug APK is about 34 MB, most of which is the bundled ML Kit text recognition model. The
-build is restricted to `arm64-v8a`; drop the `abiFilters` line in `app/build.gradle.kts` to build
-for every ABI, which roughly doubles the size.
+The debug APK is about 16 MB (release about 11 MB). The OCR and barcode models are not in the
+APK: Google Play services downloads them at install time, as it already does for the document
+scanner, so the first scan right after install can fail until they arrive. Bundling them instead
+cost about 18.5 MB. The build is restricted to `arm64-v8a`; drop the `abiFilters` line in
+`app/build.gradle.kts` to build for every ABI.
 
 ## Using it
 
@@ -90,7 +92,7 @@ company correctly on every card tested.
 | Stage | Chosen | Why not the alternative |
 |---|---|---|
 | Capture | ML Kit Document Scanner | Auto crop and perspective correction are the single biggest lever on OCR quality, and the UI runs inside Play services so the app needs no CAMERA permission. CameraX would mean writing a viewfinder plus crop and deskew by hand. |
-| OCR | ML Kit Text Recognition v2, bundled Latin | Tesseract4Android trails badly on phone photos and has no text detector. PaddleOCR PP-OCRv5 on ONNX is the credible open alternative and the better choice if CJK cards matter, but it is ~20 MB of models plus a pre/post-processing port. ML Kit measured 280-380 ms per card here. |
+| OCR | ML Kit Text Recognition v2, Latin, via Play services | Tesseract4Android trails badly on phone photos and has no text detector. PaddleOCR PP-OCRv5 on ONNX is the credible open alternative and the better choice if CJK cards matter, but it is ~20 MB of models plus a pre/post-processing port. ML Kit measured 280-380 ms per card here (with the bundled model; the Play services model gave identical text on all six recorded sample cards). |
 | Parsing | Layout-aware heuristics | Gemini Nano is unavailable. A local VLM (Gemma 4 E2B) means a 2.6 GB download and seconds per card on a Tensor G4. Email, phone and URL are pattern problems, not judgement problems, and layout cues resolve the rest. |
 | Save | `ContactsContract.Intents.Insert` | Zero permissions, and the system editor is a second review step. A direct ContentProvider write needs `WRITE_CONTACTS`, plus `READ_CONTACTS` for deduplication. |
 
@@ -225,8 +227,8 @@ Repaired addresses are marked and shown to you with the raw text, because a repa
 
 ### Known limitations
 
-- **Latin script only.** The bundled model is Latin. Chinese, Japanese, Korean and Devanagari are
-  separate ~4 MB artifacts that can be added; vertical text will still not work.
+- **Latin script only.** Chinese, Japanese, Korean and Devanagari are separate ML Kit models that
+  can be added (through Play services, without growing the APK); vertical text will still not work.
 - **No duplicate detection.** Deferred deliberately, since checking needs `READ_CONTACTS` and
   Google Contacts already offers Merge and fix. The v1 app requests no permissions at all.
 - **One side of the card.** The scanner captures two pages but only the first is parsed.

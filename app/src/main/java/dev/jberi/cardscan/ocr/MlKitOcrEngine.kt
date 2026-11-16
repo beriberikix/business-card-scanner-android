@@ -7,8 +7,10 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.tasks.await
 
 /**
- * ML Kit Text Recognition v2, bundled Latin model. Proprietary but fully on-device: the model
- * ships in the APK, so this never needs Play services or a network.
+ * ML Kit Text Recognition v2, Latin model, delivered through Google Play services. Inference is
+ * fully on-device, but the model is not in the APK: Play services downloads it (at install time,
+ * via the manifest's `com.google.mlkit.vision.DEPENDENCIES`, or on first use). Until it arrives,
+ * [recognize] throws an `MlKitException` with code `UNAVAILABLE`.
  */
 class MlKitOcrEngine : OcrEngine {
   private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
